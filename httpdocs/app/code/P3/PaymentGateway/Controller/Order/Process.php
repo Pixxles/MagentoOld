@@ -90,7 +90,8 @@ class Process extends Action implements HttpPostActionInterface, HttpGetActionIn
 
         } catch (\Exception $exception) {
             $this->logger->error($exception->getMessage(), $exception->getTrace());
-            $this->messageManager->addErrorMessage(__('Something went wrong with the payment, we were not able to process it, please contact support.'));
+            $errorMessage = ($exception->getMessage() ? $exception->getMessage() : 'Something went wrong with the payment, we were not able to process it, please contact support.');
+            $this->messageManager->addErrorMessage(__($errorMessage));
 
             return $this->redirect('checkout/cart');
         }

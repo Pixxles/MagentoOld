@@ -132,7 +132,7 @@ class P3Method extends AbstractMethod {
 
     public function getOrderPlaceRedirectUrl(): string
     {
-        return self::$_urlBuilder->getUrl('paymentgateway/order/process', ['_secure' => isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] == 'on']).'?XDEBUG_SESSION_START=PHPSTORM';
+        return self::$_urlBuilder->getUrl('paymentgateway/order/process', ['_secure' => isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] == 'on']);
     }
 
     ##################################################
@@ -186,10 +186,15 @@ class P3Method extends AbstractMethod {
             $args = array_merge(
                 $this->captureOrder(),
                 [
-                    'deviceAcceptContent'		=> (isset($_SERVER['HTTP_ACCEPT']) ? htmlentities($_SERVER['HTTP_ACCEPT']) : null),
-                    'deviceAcceptEncoding'		=> (isset($_SERVER['HTTP_ACCEPT_ENCODING']) ? htmlentities($_SERVER['HTTP_ACCEPT_ENCODING']) : null),
-                    'deviceAcceptLanguage'		=> (isset($_SERVER['HTTP_ACCEPT_LANGUAGE']) ? htmlentities($_SERVER['HTTP_ACCEPT_LANGUAGE']) : null),
-                    'deviceAcceptCharset'		=> (isset($_SERVER['HTTP_ACCEPT_CHARSET']) ? htmlentities($_SERVER['HTTP_ACCEPT_CHARSET']) : null),
+                'deviceChannel'				=> 'browser',
+                'deviceIdentity'			=> (isset($_SERVER['HTTP_USER_AGENT']) ? htmlentities($_SERVER['HTTP_USER_AGENT']) : null),
+                'deviceTimeZone'			=> '0',
+                'deviceCapabilities'		=> '',
+                'deviceScreenResolution'	=> '1x1x1',
+                'deviceAcceptContent'		=> (isset($_SERVER['HTTP_ACCEPT']) ? htmlentities($_SERVER['HTTP_ACCEPT']) : null),
+                'deviceAcceptEncoding'		=> (isset($_SERVER['HTTP_ACCEPT_ENCODING']) ? htmlentities($_SERVER['HTTP_ACCEPT_ENCODING']) : null),
+                'deviceAcceptLanguage'		=> (isset($_SERVER['HTTP_ACCEPT_LANGUAGE']) ? htmlentities($_SERVER['HTTP_ACCEPT_LANGUAGE']) : null),
+                'deviceAcceptCharset'		=> (isset($_SERVER['HTTP_ACCEPT_CHARSET']) ? htmlentities($_SERVER['HTTP_ACCEPT_CHARSET']) : null),
                 ],
                 $_POST['browserInfo'],
                 [
@@ -202,7 +207,10 @@ class P3Method extends AbstractMethod {
             );
 
             $response = $this->gateway->directRequest($args);
-            setcookie('xref', $response['xref'], time()+315);
+            
+            if(isset($response['xref'])) {
+                setcookie('xref', $response['xref'], time()+315);
+            }
 
             return $response;
         }
@@ -386,26 +394,28 @@ class P3Method extends AbstractMethod {
         $merchantId = $this->getConfigData('merchant_id');
 
         $req = [
-            'merchantID'        => $merchantId,
-            'amount'            => $amount,
-            'transactionUnique' => uniqid(),
-            'orderRef'          => $ref,
-            'countryCode'       => $billingAddress->getCountryId(),
-            'currencyCode'      => $order->getBaseCurrency()->getCode(),
-            'customerName'      => $billingAddress->getName(),
-            'customerAddress'   => $address,
-            'customerPostCode'  => $billingAddress->getPostcode(),
-            'customerEmail'     => $billingAddress->getEmail(),
+            'merchantID'            => $merchantId,
+            'amount'                => $amount,
+            'transactionUnique'     => uniqid(),
+            'orderRef'              => $ref,
+            'currencyCode'          => $order->getBaseCurrency()->getCode(),
+            'customerName'          => $billingAddress->getName(),
+            'customerCountryCode'   => $billingAddress->getCountryId(),
+            'customerTown'          => $billingAddress->getCity(),
+            'customerAddress'       => $address,
+            'customerPostCode'      => $billingAddress->getPostcode(),
+            'customerEmail'         => $billingAddress->getEmail(),
         ];
 
         if (filter_var($_SERVER['REMOTE_ADDR'], FILTER_VALIDATE_IP, FILTER_FLAG_IPV4)) {
             $req['remoteAddress']   = $_SERVER['REMOTE_ADDR'];
+        } else {
+            // TODO Remove after test
+            $req['remoteAddress']   = '52.137.38.250';
         }
 
         $req['action'] = 'SALE';
         $req['type'] = 1;
-        $req['debug'] = 1;
-        $req['merchantCategoryCode'] = 5411;
 
         if(!is_null($billingAddress->getTelephone())) {
             $req["customerPhone"] = $billingAddress->getTelephone();
