@@ -409,11 +409,8 @@ class P3Method extends AbstractMethod {
 
         if (filter_var($_SERVER['REMOTE_ADDR'], FILTER_VALIDATE_IP, FILTER_FLAG_IPV4)) {
             $req['remoteAddress']   = $_SERVER['REMOTE_ADDR'];
-        } else {
-            // TODO Remove after test
-            $req['remoteAddress']   = '52.137.38.250';
         }
-
+        
         $req['action'] = 'SALE';
         $req['type'] = 1;
 
