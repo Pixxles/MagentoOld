@@ -1,0 +1,6 @@
+CONTRIBUTING.md export-ignore
+.gitattributes export-ignore
+composer.json export-ignore
+composer.lock export-ignore
+.gitignore export-ignore
+LICENSE export-ignore

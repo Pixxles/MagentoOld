@@ -93,9 +93,9 @@ class P3Method extends AbstractMethod {
         Session $checkoutSession,
         CustomerSession $customerSession,
         BuilderInterface $transactionBuilder,
+        InvoiceSender $invoiceSender,
         AbstractResource $resource = null,
         AbstractDb $resourceCollection = null,
-        InvoiceSender $invoiceSender,
         array $data = []
     ) {
         self::$_urlBuilder = $urlBuilder;
